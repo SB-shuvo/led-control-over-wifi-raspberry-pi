@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Raspberry Pi LED Control</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        .led-status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .on {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .off {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .on-button {
+            background-color: #28a745;
+            color: white;
+        }
+        .off-button {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Raspberry Pi LED Control</h1>
+    
+    <div id="status-container">
+        <div id="led-status" class="led-status off">LED is OFF</div>
+    </div>
+    
+    <div class="button-container">
+        <button id="on-button" class="on-button">Turn ON</button>
+        <button id="off-button" class="off-button">Turn OFF</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const statusElement = document.getElementById('led-status');
+            const onButton = document.getElementById('on-button');
+            const offButton = document.getElementById('off-button');
+            
+            // Update LED status on page load
+            updateStatus();
+            
+            // Set up button click events
+            onButton.addEventListener('click', function() {
+                controlLED('on');
+            });
+            
+            offButton.addEventListener('click', function() {
+                controlLED('off');
+            });
+            
+            // Function to control LED
+            function controlLED(action) {
+                fetch('/led/control', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `action=${action}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    updateStatusDisplay(data.status);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Function to get current LED status
+            function updateStatus() {
+                fetch('/led/status')
+                .then(response => response.json())
+                .then(data => {
+                    updateStatusDisplay(`LED is ${data.status}`);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                });
+            }
+            
+            // Update status display
+            function updateStatusDisplay(statusText) {
+                statusElement.textContent = statusText;
+                if (statusText.includes('ON')) {
+                    statusElement.className = 'led-status on';
+                } else {
+                    statusElement.className = 'led-status off';
+                }
+            }
+            
+            // Update status every 5 seconds
+            setInterval(updateStatus, 5000);
+        });
+    </script>
+</body>
+</html>
